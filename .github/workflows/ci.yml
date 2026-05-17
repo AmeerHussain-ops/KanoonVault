@@ -38,7 +38,7 @@ jobs:
         run: python scripts/ci_smoke.py --offline
 
       - name: API key smoke (when secrets configured)
-        if: ${{ secrets.OPENROUTER_API_KEY != '' }}
+        if: secrets.OPENROUTER_API_KEY != ''
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           TIMELINE_API_KEY: ${{ secrets.TIMELINE_API_KEY }}
