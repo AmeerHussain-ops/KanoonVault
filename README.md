@@ -415,16 +415,19 @@ For a broader architectural view, see `DESIGN_REFERENCES.md`.
 - Auto-sync logic: `main.py` (`GET /timeline/{case_id}`) and `services/case_service.py` (`sync_case_timeline`)
 - Adjust `TIMELINE_EXTRACTION_PROMPT` for LLM-based extraction
 
-## License & Attribution
+## License
 
-KanoonVault uses:
-- **FastAPI** — Web framework
-- **SQLite** — Local database with FTS5
-- **ChromaDB** — Vector embeddings
-- **PyMuPDF** — PDF text extraction and page rendering (required for PDFs)
-- **PaddleOCR** — Primary local OCR (Python 3.10.x)
-- **Tesseract OCR** — Local OCR fallback
-- **OpenRouter** — Chat (GLM), vision OCR (Gemma 4), and timeline (Gemma 4)
+KanoonVault is released under the **[MIT License](LICENSE)** (SPDX: `MIT`).
+
+You may use, copy, modify, merge, publish, distribute, sublicense, and sell copies of the software, subject to including the copyright notice and license text in distributions.
+
+To use your own name in the copyright line, edit the `Copyright (c)` line in `LICENSE` before publishing.
+
+### Third-party components
+
+KanoonVault depends on (not exhaustive):
+
+- **FastAPI**, **SQLite**, **ChromaDB**, **PyMuPDF**, **PaddleOCR**, **Tesseract**, **OpenRouter** — each under their own licenses; see upstream projects for terms.
 
 ## Contributing
 
@@ -472,7 +475,7 @@ git status   # double-check no .env or database files
 git commit -m "Initial public release: KanoonVault Legal Memory OS"
 ```
 
-Create an empty repository on GitHub (no README/license — this repo already has them), then:
+Create an empty repository on GitHub. When prompted for a license, choose **MIT** (or skip — this repo already includes [`LICENSE`](LICENSE)), then:
 
 ```bash
 git remote add origin https://github.com/YOUR_USERNAME/KanoonVault.git
@@ -498,10 +501,6 @@ Settings → **Secrets and variables** → **Actions** → **New repository secr
 - Enable **Issues** for bug reports
 - Set default branch to `main`
 
-## License
-
-This project is licensed under the [MIT License](LICENSE).
-
 ---
 
-**KanoonVault** · MIT · Python 3.10 · May 2026
+**KanoonVault** · [MIT License](LICENSE) · Python 3.10 · May 2026
