@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.cursor/
+
+# Local runtime data (never publish)
+kanoonvault.db
+*.sqlite3
+chroma_db/
+uploads/*
+!uploads/.gitkeep
+.deps_installed
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Build / packaging
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Logs and temp
+*.log
+__ocr_temp_*
+
+# Optional large local test assets (uncomment if needed)
+# test_petition.png

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KanoonVault – Legal Memory OS</title>
+  <meta name="description"
+    content="A ChatGPT-like interface for legal cases and documents. Upload FIRs, court orders and ask questions – AI answers from your case memory only." />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+
+  <div id="app">
+
+    <!-- ── HEADER ──────────────────────────────────────────────────────────── -->
+    <header id="header">
+      <div class="logo-icon"></div>
+      <div>
+        <div class="logo-text">KanoonVault</div>
+        <div class="logo-tagline">Legal Memory OS</div>
+      </div>
+    </header>
+
+    <!-- ── SIDEBAR ─────────────────────────────────────────────────────────── -->
+    <aside id="sidebar">
+
+      <button id="btn-new-case">＋ New Case</button>
+
+      <!-- Search -->
+      <div id="sidebar-search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="sidebar-search" placeholder="Search cases…" autocomplete="off" />
+      </div>
+
+      <div class="sidebar-section-title">Cases</div>
+      <!-- Status filter tabs -->
+      <div id="status-tabs">
+        <button type="button" class="status-tab active" data-filter="all">All</button>
+        <button type="button" class="status-tab" data-filter="active">Open</button>
+        <button type="button" class="status-tab" data-filter="closed">Closed</button>
+        <button type="button" class="status-tab" data-filter="reopened">Reopened</button>
+        <button type="button" class="status-tab status-tab-trash" data-filter="trash">Trash</button>
+      </div>
+
+      <div id="cases-list">
+        <div class="empty-cases">No cases yet.<br />Upload a document to get started.</div>
+      </div>
+
+      <div id="sidebar-footer">KanoonVault v1.0 · Local-First · Private</div>
+    </aside>
+
+    <!-- ── MAIN CHAT AREA ───────────────────────────────────────────────────── -->
+    <main id="chat-area">
+
+      <!-- Active case banner -->
+      <div id="case-banner">
+        <div class="banner-left">
+          <span class="banner-case-name" id="banner-name">–</span>
+          <span id="banner-status-badge" class="case-badge badge-active">active</span>
+        </div>
+        <div class="banner-actions">
+          <button id="btn-view-timeline" class="banner-btn">📅 Timeline</button>
+          <button id="btn-view-documents" class="banner-btn">📄 Documents</button>
+          <div class="banner-status-menu">
+            <button id="btn-status-menu" class="banner-btn">Status ▾</button>
+            <div id="status-dropdown" class="status-dropdown hidden">
+              <button class="status-option" data-status="active">✅ Mark Active</button>
+              <button class="status-option" data-status="closed">🔒 Close Case</button>
+              <button class="status-option" data-status="reopened">🔁 Reopen Case</button>
+            </div>
+          </div>
+          <button id="btn-delete-case" type="button" class="banner-btn banner-btn-danger">🗑️ Delete Case</button>
+          <button id="btn-clear-chat" class="banner-btn">🗑 Clear Chat</button>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div id="messages">
+        <div id="welcome-screen">
+          <div class="welcome-logo"></div>
+          <div class="welcome-title">Welcome to KanoonVault</div>
+          <div class="welcome-sub">
+            Upload a legal document — FIR, court order, petition, or any case file —
+            and I'll read it, create a case record, and answer your questions from it.
+          </div>
+          <div class="welcome-chips">
+            <div class="chip" data-prompt="What is this case about?">What is this case about?</div>
+            <div class="chip" data-prompt="List all timeline events from this document">Show timeline events</div>
+            <div class="chip" data-prompt="Who are the parties involved?">Who are the parties?</div>
+            <div class="chip" data-prompt="Summarize the key facts">Summarize key facts</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline panel (slides in from right) -->
+      <div id="timeline-panel">
+        <div class="timeline-header">
+          <h3>CASE TIMELINE</h3>
+          <button type="button" id="btn-close-timeline">✕</button>
+        </div>
+        <div id="timeline-events">
+          <div class="no-events">No timeline events yet.</div>
+        </div>
+      </div>
+
+      <div id="documents-panel">
+        <div class="documents-header">
+          <h3>CASE DOCUMENTS</h3>
+          <button id="btn-close-documents">✕</button>
+        </div>
+        <div id="documents-list-wrap">
+          <div id="documents-list" class="documents-list"></div>
+          <div id="documents-empty" class="no-documents">No documents uploaded for this case yet.</div>
+        </div>
+      </div>
+
+      <!-- Input -->
+      <div id="input-area">
+        <div id="input-form">
+          <button id="btn-upload" title="Upload document (PDF, image, text)">📎</button>
+          <textarea id="chat-input" rows="1" placeholder="Ask about a case, or upload a document to begin…"
+            autocomplete="off"></textarea>
+          <button id="btn-send" title="Send">▲</button>
+        </div>
+        <div class="input-hint">Answers are grounded in uploaded documents only · No legal advice</div>
+      </div>
+
+      <!-- Hidden file input -->
+      <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png,.bmp,.tiff,.webp,.txt" />
+    </main>
+
+  </div>
+
+  <!-- ── NEW CASE MODAL ──────────────────────────────────────────────────────── -->
+  <div id="modal-overlay">
+    <div class="modal">
+      <h3>Create New Case</h3>
+      <input type="text" id="modal-case-name" placeholder="Case name (e.g. State vs Ahmed)" maxlength="100" />
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btn-modal-cancel">Cancel</button>
+        <button class="btn-primary" id="btn-modal-create">Create Case</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MOVE TO TRASH (soft delete) ─────────────────────────────────────────── -->
+  <div id="delete-modal-overlay">
+    <div class="modal modal-soft-trash">
+      <h3>Move this case to Trash?</h3>
+      <p class="delete-case-soft-lead">
+        The case can be restored later until permanently deleted from Trash.
+      </p>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="btn-delete-modal-cancel">Cancel</button>
+        <button type="button" class="btn-soft-trash" id="btn-delete-modal-confirm">Move to Trash</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PERMANENT DELETE (from Trash) ───────────────────────────────────────── -->
+  <div id="permanent-delete-modal-overlay">
+    <div class="modal modal-danger">
+      <h3>Permanently delete this case?</h3>
+      <div class="delete-case-warning">
+        <p>This will permanently remove:</p>
+        <ul>
+          <li>uploaded documents</li>
+          <li>OCR text</li>
+          <li>timeline events</li>
+          <li>vector memory</li>
+          <li>chat history</li>
+          <li>citations</li>
+        </ul>
+        <p class="delete-case-irreversible">This action cannot be undone.</p>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="btn-permanent-modal-cancel">Cancel</button>
+        <button type="button" class="btn-danger" id="btn-permanent-modal-confirm">Delete permanently</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DOCUMENT PREVIEW (images / text) ────────────────────────────────────── -->
+  <div id="preview-modal-overlay">
+    <div class="preview-modal">
+      <div class="preview-modal-toolbar">
+        <span id="preview-modal-title" class="preview-modal-title"></span>
+        <button type="button" id="btn-close-preview" class="preview-close">✕</button>
+      </div>
+      <div id="preview-modal-body" class="preview-modal-body"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+
+</html>
