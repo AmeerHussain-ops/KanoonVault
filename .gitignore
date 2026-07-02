@@ -42,3 +42,10 @@ __ocr_temp_*
 
 # Optional large local test assets (uncomment if needed)
 # test_petition.png
+
+# Database runtime files
+*.db-shm
+*.db-wal
+
+# Test assets
+*.png
