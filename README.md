@@ -1,3 +1,7 @@
+
+
+https://github.com/user-attachments/assets/ea5d6b9d-c3c5-4a30-8c0a-1325331e1ab4
+
 # KanoonVault — Legal Memory OS
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
