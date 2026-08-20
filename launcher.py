@@ -1,7 +1,7 @@
 """
 KanoonVault Windows Application Launcher
 Handles:
-- Setting up user data directories (%APPDATA%\KanoonVault\)
+- Setting up user data directories (%APPDATA%\\KanoonVault\\)
 - Starting FastAPI backend
 - Opening browser automatically
 - Graceful shutdown
@@ -23,16 +23,16 @@ import signal
 def setup_user_data_directory():
     """
     Create and return the user data directory path.
-    On Windows, this is %APPDATA%\KanoonVault\
+    On Windows, this is %LOCALAPPDATA%\\KanoonVault\\
     
     Returns:
         Path: User data directory
     """
     if sys.platform == "win32":
-        appdata = os.getenv("APPDATA")
-        if not appdata:
-            appdata = str(Path.home() / "AppData" / "Roaming")
-        user_data_dir = Path(appdata) / "KanoonVault"
+        localappdata = os.getenv("LOCALAPPDATA")
+        if not localappdata:
+            localappdata = str(Path.home() / "AppData" / "Local")
+        user_data_dir = Path(localappdata) / "KanoonVault"
     else:
         # For non-Windows (fallback)
         user_data_dir = Path.home() / ".KanoonVault"
@@ -238,7 +238,6 @@ def run_server_in_thread(port=8000, host="127.0.0.1"):
 def cleanup():
     """Cleanup function called on application exit."""
     print("\n[*] Shutting down KanoonVault...")
-    sys.exit(0)
 
 
 def main():
@@ -288,7 +287,6 @@ def main():
     print("[*] Starting FastAPI server...")
     server_thread = run_server_in_thread(port)
     
-    # Give server a moment to start, then open browser
     browser_thread = Thread(
         target=open_browser,
         args=(port,),
@@ -296,10 +294,10 @@ def main():
     )
     browser_thread.start()
     
-    # Keep the main thread alive
+    # Keep the launcher alive so the packaged EXE stays running.
     try:
         while True:
-            time.sleep(1)
+            time.sleep(0.5)
     except KeyboardInterrupt:
         cleanup()
 

@@ -33,6 +33,9 @@ uploads/*
 # Build / packaging
 dist/
 build/
+installer/
+packaging/windows/build/
+packaging/windows/dist/
 *.egg-info/
 .eggs/
 *.spec.pyc
