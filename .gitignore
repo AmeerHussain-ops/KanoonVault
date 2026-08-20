@@ -35,6 +35,10 @@ dist/
 build/
 *.egg-info/
 .eggs/
+*.spec.pyc
+*.exe
+installer-output/
+*.iss.bak
 
 # Logs and temp
 *.log

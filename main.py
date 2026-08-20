@@ -228,6 +228,273 @@ def serve_index():
     return FileResponse(str(FRONTEND_DIR / "index.html"))
 
 
+# ── SETUP / CONFIGURATION ──────────────────────────────────────────────────────
+@app.get("/api/setup/status")
+def setup_status():
+    """Check if initial setup is complete (API key configured)."""
+    try:
+        from credentials import is_api_key_configured
+        has_openrouter = is_api_key_configured("OPENROUTER")
+        
+        return {
+            "setup_complete": has_openrouter,
+            "has_openrouter_key": has_openrouter,
+            "message": "Setup complete" if has_openrouter else "No API key configured"
+        }
+    except Exception as e:
+        print(f"[Setup] Error checking status: {e}")
+        return {
+            "setup_complete": False,
+            "has_openrouter_key": False,
+            "error": str(e)
+        }
+
+
+@app.post("/api/setup/test-api-key")
+async def test_api_key_endpoint(api_key: str):
+    """
+    Test an OpenRouter API key without saving it.
+    
+    Query parameter:
+        api_key: The API key to test
+        
+    Returns detailed status about whether the key is valid.
+    """
+    if not api_key or not api_key.strip():
+        return {
+            "valid": False,
+            "status": "empty",
+            "message": "❌ API key cannot be empty"
+        }
+    
+    try:
+        from services.api_key_service import test_api_key_async
+        result = await test_api_key_async(api_key.strip())
+        
+        return {
+            "valid": result.valid,
+            "status": result.status,
+            "message": result.message,
+            "details": result.details
+        }
+    except Exception as e:
+        print(f"[Setup] Error testing API key: {e}")
+        return {
+            "valid": False,
+            "status": "test_error",
+            "message": f"❌ Test failed: {str(e)[:100]}",
+            "details": {"error": str(e)}
+        }
+
+
+@app.post("/api/setup/save-api-key")
+def save_api_key(api_key: str, key_type: str = "OPENROUTER"):
+    """
+    Save a validated API key to secure storage.
+    
+    Query parameters:
+        api_key: The API key to save
+        key_type: Type of key (OPENROUTER, OCR_VISION, TIMELINE)
+        
+    Note: Call /api/setup/test-api-key first to validate.
+    """
+    if not api_key or not api_key.strip():
+        raise HTTPException(400, "API key cannot be empty")
+    
+    try:
+        from credentials import save_api_key as save_key_func
+        success = save_key_func(key_type, api_key.strip())
+        
+        if success:
+            return {
+                "ok": True,
+                "message": f"API key saved successfully",
+                "key_type": key_type
+            }
+        else:
+            return {
+                "ok": False,
+                "message": "Failed to save API key",
+                "key_type": key_type
+            }
+    except Exception as e:
+        print(f"[Setup] Error saving API key: {e}")
+        raise HTTPException(500, f"Failed to save API key: {e}")
+
+
+# ── STORAGE CONFIGURATION ──────────────────────────────────────────────────────
+@app.get("/api/setup/storage-location")
+def get_storage_location():
+    """Get the current or default storage location."""
+    try:
+        from storage_manager import get_current_storage_dir, get_default_storage_dir, is_first_run_complete
+        
+        current_dir = get_current_storage_dir()
+        first_run_complete = is_first_run_complete()
+        
+        return {
+            "default_storage_dir": str(current_dir),
+            "first_run_complete": first_run_complete
+        }
+    except Exception as e:
+        print(f"[Setup] Error getting storage location: {e}")
+        return {
+            "default_storage_dir": str(Path.home() / "AppData" / "Local" / "KanoonVault"),
+            "first_run_complete": False,
+            "error": str(e)
+        }
+
+
+@app.get("/api/setup/storage-info")
+def get_storage_info(path: str):
+    """Get information about a storage path."""
+    try:
+        from storage_manager import get_storage_info, get_available_disk_space, validate_storage_path
+        
+        storage_path = Path(path)
+        
+        # Validate path
+        validation = validate_storage_path(storage_path)
+        
+        info = {
+            "path": str(storage_path),
+            "valid": validation["valid"],
+            "errors": validation["errors"],
+            "warnings": validation["warnings"],
+            "disk_space": get_available_disk_space(storage_path),
+            "existing_data": None
+        }
+        
+        # Check if there's existing data
+        if storage_path.exists():
+            storage_detail = get_storage_info(storage_path)
+            info["existing_data"] = {
+                "size_mb": storage_detail["total_size_mb"],
+                "file_count": storage_detail["file_counts"]["total"]
+            }
+        
+        return info
+    except Exception as e:
+        print(f"[Setup] Error getting storage info: {e}")
+        raise HTTPException(500, f"Failed to get storage info: {e}")
+
+
+@app.post("/api/setup/browse-storage-location")
+def browse_storage_location():
+    """Open a folder selection dialog and return the selected path."""
+    try:
+        from folder_dialog import select_folder
+        from storage_manager import get_current_storage_dir
+        
+        # Get current location to use as initial directory
+        current_dir = get_current_storage_dir()
+        
+        # Open folder dialog
+        selected = select_folder(
+            title="Choose KanoonVault Storage Folder",
+            initial_dir=str(current_dir)
+        )
+        
+        if selected:
+            return {
+                "selected_path": selected,
+                "cancelled": False
+            }
+        else:
+            return {
+                "selected_path": None,
+                "cancelled": True
+            }
+    except Exception as e:
+        print(f"[Setup] Error opening folder dialog: {e}")
+        return {
+            "selected_path": None,
+            "cancelled": False,
+            "error": f"Failed to open folder dialog: {e}"
+        }
+
+
+@app.post("/api/setup/confirm-storage-location")
+def confirm_storage_location(body: dict):
+    """
+    Confirm and save the storage location.
+    Handles data migration if location changes.
+    """
+    try:
+        from storage_manager import (
+            get_current_storage_dir,
+            initialize_storage_directory,
+            migrate_data,
+            save_storage_config,
+            validate_storage_path
+        )
+        
+        new_dir_str = body.get("storage_dir")
+        if not new_dir_str:
+            raise HTTPException(400, "storage_dir is required")
+        
+        new_dir = Path(new_dir_str)
+        
+        # Validate the new path
+        validation = validate_storage_path(new_dir)
+        if not validation["valid"]:
+            raise HTTPException(400, f"Invalid storage path: {', '.join(validation['errors'])}")
+        
+        # Initialize new directory
+        if not initialize_storage_directory(new_dir):
+            raise HTTPException(500, "Failed to initialize storage directory")
+        
+        # Get current storage directory
+        current_dir = get_current_storage_dir()
+        
+        # Migrate data if path changed
+        migration_info = {"skipped": True}
+        if current_dir.resolve() != new_dir.resolve():
+            print(f"[Setup] Migrating data from {current_dir} to {new_dir}")
+            migration_info = migrate_data(current_dir, new_dir)
+            
+            if not migration_info.get("success"):
+                raise HTTPException(500, f"Migration failed: {', '.join(migration_info.get('messages', []))}")
+        
+        # Save configuration
+        if not save_storage_config(new_dir, first_run_complete=False):
+            raise HTTPException(500, "Failed to save storage configuration")
+        
+        return {
+            "ok": True,
+            "message": "Storage location configured",
+            "storage_dir": str(new_dir),
+            "migration": migration_info
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[Setup] Error confirming storage location: {e}")
+        raise HTTPException(500, f"Failed to confirm storage location: {e}")
+
+
+@app.post("/api/setup/mark-first-run-complete")
+def mark_first_run_complete():
+    """Mark the first-run setup as complete."""
+    try:
+        from storage_manager import get_current_storage_dir, save_storage_config
+        
+        current_dir = get_current_storage_dir()
+        
+        if not save_storage_config(current_dir, first_run_complete=True):
+            raise HTTPException(500, "Failed to save configuration")
+        
+        return {
+            "ok": True,
+            "message": "First-run setup marked as complete"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[Setup] Error marking first-run complete: {e}")
+        raise HTTPException(500, f"Failed to mark first-run complete: {e}")
+
+
 # ── UPLOAD ─────────────────────────────────────────────────────────────────────
 @app.post("/upload")
 async def upload_file(request: Request, file: UploadFile = File(...), case_id: int = None):

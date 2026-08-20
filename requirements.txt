@@ -14,3 +14,6 @@ chromadb==0.5.15
 # PaddleOCR – only available on Python 3.10 / 3.11
 paddlepaddle==2.6.2
 paddleocr==2.9.1
+
+# Windows credential manager for secure API key storage
+keyring==24.3.1
