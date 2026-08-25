@@ -74,14 +74,20 @@ const statusDropdown = document.getElementById('status-dropdown');
 const btnClearChat = document.getElementById('btn-clear-chat');
 
 // ── Init ───────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+function initApp() {
     (async () => {
         await loadCases();
         renderCasesList();
         checkOllama();
         setupListeners();
     })();
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}
 
 // ── Event Listeners ────────────────────────────────────────────────────────
 function setupListeners() {
@@ -498,19 +504,19 @@ function markdownToHtml(md) {
     let html = escHtml(md);
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-    
+
     // Handle source links in the format: [Document Name] — Page [Number] — [DOC_ID:123]
     html = html.replace(/\[([^\]]+)\] — Page \[(\d+)\] — \[DOC_ID:(\d+)\]/g, (match, docName, pageNum, docId) => {
         const href = docOpenHref(docId);
         return `<div class="source-link">[${docName}] — Page [${pageNum}] — <a href="${href}" target="_blank" rel="noopener" class="file-link">Open File</a></div>`;
     });
-    
+
     // Handle source links without page numbers: [Document Name] — [DOC_ID:123]
     html = html.replace(/\[([^\]]+)\] — \[DOC_ID:(\d+)\]/g, (match, docName, docId) => {
         const href = docOpenHref(docId);
         return `<div class="source-link">[${docName}] — <a href="${href}" target="_blank" rel="noopener" class="file-link">Open File</a></div>`;
     });
-    
+
     const lines = html.split('\n');
     const out = [];
     let inList = false;
@@ -584,7 +590,7 @@ async function streamChat(question) {
                         bubble.innerHTML = `<span style="color:var(--danger)">${escHtml(token)}</span>`;
                         break;
                     }
-                    
+
                     // Check if this is a special command response (direct file link)
                     if (token.startsWith('http') && (token.includes('/documents/') || token.includes('show original file'))) {
                         let href = token.trim();
@@ -595,14 +601,14 @@ async function streamChat(question) {
                         bubble.innerHTML = `<a href="${escHtml(href)}" target="_blank" rel="noopener" class="file-link">📄 Open File</a>`;
                         break;
                     }
-                    
+
                     // Check if this is sources section
                     if (token.startsWith('\nSources:\n') || token.startsWith('Sources:\n')) {
                         sourcesText = token;
                         // Continue collecting sources
                         continue;
                     }
-                    
+
                     // Regular token - add to main text
                     fullText += token;
                     bubble.innerHTML = markdownToHtml(fullText + sourcesText) + '<span class="cursor"></span>';

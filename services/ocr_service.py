@@ -386,6 +386,46 @@ def _ocr_vision_llm(image_bytes: bytes, extension: str = ".jpg") -> str:
     }
     mime = mime_map.get(extension, "image/jpeg")
 
+    # Roboflow Serverless Workflow endpoint support
+    if "roboflow.com" in OCR_VISION_URL.lower():
+        url = OCR_VISION_URL
+        if "api_key=" not in url and OCR_VISION_API_KEY:
+            url += f"{'&' if '?' in url else '?'}api_key={OCR_VISION_API_KEY}"
+
+        payload = {
+            "inputs": {
+                "image": {
+                    "type": "base64",
+                    "value": b64
+                }
+            }
+        }
+        headers = {"Content-Type": "application/json"}
+        if OCR_VISION_API_KEY:
+            headers["Authorization"] = f"Bearer {OCR_VISION_API_KEY}"
+
+        try:
+            with httpx.Client(timeout=90.0) as client:
+                resp = client.post(url, json=payload, headers=headers)
+                resp.raise_for_status()
+
+            data = resp.json()
+            if isinstance(data, list) and len(data) > 0:
+                data = data[0]
+            if isinstance(data, dict):
+                outputs = data.get("outputs") or data.get("output") or data.get("predictions") or data
+                if isinstance(outputs, list) and len(outputs) > 0:
+                    outputs = outputs[0]
+                if isinstance(outputs, dict):
+                    content = outputs.get("ocr") or outputs.get("text") or outputs.get("result") or outputs.get("content") or str(outputs)
+                    return str(content).strip()
+                elif isinstance(outputs, str):
+                    return outputs.strip()
+            return str(data).strip()
+        except Exception as e:
+            print(f"[OCR Vision LLM - Roboflow] Error: {e}")
+            return ""
+
     payload = {
         "model": OCR_VISION_MODEL,
         "messages": [

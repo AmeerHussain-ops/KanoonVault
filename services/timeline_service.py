@@ -48,7 +48,8 @@ EVENT_KEYWORDS = [
 
 
 def _timeline_api_key() -> str:
-    return TIMELINE_API_KEY or OPENROUTER_API_KEY
+    from config import get_api_key
+    return get_api_key("TIMELINE") or get_api_key("OPENROUTER")
 
 
 def _expand_year(y: str) -> Optional[str]:

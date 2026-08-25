@@ -48,7 +48,12 @@
         <div class="empty-cases">No cases yet.<br />Upload a document to get started.</div>
       </div>
 
-      <div id="sidebar-footer">KanoonVault v1.0 · Local-First · Private</div>
+      <div id="sidebar-footer">
+        <div>KanoonVault v1.0 · Local-First</div>
+        <a href="/static/setup.html"
+          style="color: #4a90e2; font-size: 12px; text-decoration: none; display: inline-block; margin-top: 4px;">⚙️
+          Setup API Keys</a>
+      </div>
     </aside>
 
     <!-- ── MAIN CHAT AREA ───────────────────────────────────────────────────── -->
@@ -195,7 +200,54 @@
 
   <div id="toast" class="toast hidden" role="status"></div>
 
-  <script src="/static/app.js"></script>
+  <script>
+    // Check if first-run setup is complete
+    async function checkSetupAndInitialize() {
+      try {
+        // First check if setup/storage is complete
+        const storageResponse = await fetch('/api/setup/storage-location');
+        const storageData = await storageResponse.json();
+
+        if (!storageData.first_run_complete) {
+          // First-run setup not complete
+          console.log('[Setup] First-run setup not complete, redirecting to welcome');
+          window.location.href = '/static/welcome.html';
+          return;
+        }
+
+        // Then check if API key is configured
+        const keyResponse = await fetch('/api/setup/status');
+        const keyData = await keyResponse.json();
+
+        if (!keyData.setup_complete) {
+          // API key not configured
+          console.log('[Setup] API key not configured, redirecting to setup');
+          window.location.href = '/static/setup.html';
+          return;
+        }
+
+        // All setup complete, load the main app
+        console.log('[Setup] All setup complete, loading main app');
+        loadMainApp();
+      } catch (error) {
+        console.error('[Setup] Error checking setup status:', error);
+        // If we can't check, assume setup is needed to be safe
+        // But give a moment for the server to be ready
+        console.log('[Setup] Could not check status, retrying...');
+        setTimeout(checkSetupAndInitialize, 1000);
+      }
+    }
+
+    function loadMainApp() {
+      // Load the main app script
+      const script = document.createElement('script');
+      script.src = '/static/app.js';
+      document.body.appendChild(script);
+    }
+
+    // Start the setup check
+    checkSetupAndInitialize();
+  </script>
 </body>
 
 </html>
