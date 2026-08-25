@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +11,7 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
@@ -20,12 +21,12 @@
             justify-content: center;
             padding: 20px;
         }
-        
+
         .container {
             max-width: 450px;
             width: 100%;
         }
-        
+
         .setup-card {
             background: white;
             border-radius: 12px;
@@ -33,38 +34,39 @@
             padding: 40px;
             animation: slideIn 0.3s ease-out;
         }
-        
+
         @keyframes slideIn {
             from {
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
-        
+
         .logo {
             text-align: center;
             margin-bottom: 30px;
         }
-        
+
         .logo h1 {
             font-size: 28px;
             color: #1e3c72;
             margin-bottom: 8px;
         }
-        
+
         .logo p {
             color: #666;
             font-size: 14px;
         }
-        
+
         .form-group {
             margin-bottom: 24px;
         }
-        
+
         label {
             display: block;
             font-weight: 600;
@@ -72,7 +74,7 @@
             margin-bottom: 8px;
             font-size: 14px;
         }
-        
+
         input[type="text"],
         input[type="password"] {
             width: 100%;
@@ -83,26 +85,26 @@
             font-family: inherit;
             transition: border-color 0.2s;
         }
-        
+
         input[type="text"]:focus,
         input[type="password"]:focus {
             outline: none;
             border-color: #2a5298;
         }
-        
+
         .input-hint {
             display: block;
             font-size: 12px;
             color: #999;
             margin-top: 6px;
         }
-        
+
         .button-group {
             display: flex;
             gap: 12px;
             margin-bottom: 20px;
         }
-        
+
         button {
             padding: 12px 20px;
             border: none;
@@ -113,47 +115,47 @@
             transition: all 0.2s;
             flex: 1;
         }
-        
+
         .btn-test {
             background: #f0f0f0;
             color: #333;
             border: 2px solid #e0e0e0;
         }
-        
+
         .btn-test:hover {
             background: #e8e8e8;
             border-color: #d0d0d0;
         }
-        
+
         .btn-test:active {
             transform: scale(0.98);
         }
-        
+
         .btn-test:disabled,
         .btn-test[disabled] {
             opacity: 0.5;
             cursor: not-allowed;
         }
-        
+
         .btn-continue {
             background: #2a5298;
             color: white;
             flex: 2;
         }
-        
+
         .btn-continue:hover:not([disabled]) {
             background: #1e3c72;
         }
-        
+
         .btn-continue:active:not([disabled]) {
             transform: scale(0.98);
         }
-        
+
         .btn-continue[disabled] {
             opacity: 0.5;
             cursor: not-allowed;
         }
-        
+
         .status-message {
             padding: 14px 16px;
             border-radius: 8px;
@@ -163,38 +165,39 @@
             font-size: 13px;
             line-height: 1.5;
         }
-        
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
             }
+
             to {
                 opacity: 1;
             }
         }
-        
+
         .status-message.show {
             display: block;
         }
-        
+
         .status-success {
             background: #e8f5e9;
             border-left: 4px solid #4caf50;
             color: #2e7d32;
         }
-        
+
         .status-error {
             background: #ffebee;
             border-left: 4px solid #f44336;
             color: #c62828;
         }
-        
+
         .status-loading {
             background: #e3f2fd;
             border-left: 4px solid #2196f3;
             color: #1565c0;
         }
-        
+
         .spinner {
             display: inline-block;
             width: 14px;
@@ -206,13 +209,13 @@
             margin-right: 8px;
             vertical-align: middle;
         }
-        
+
         @keyframes spin {
             to {
                 transform: rotate(360deg);
             }
         }
-        
+
         .help-text {
             background: #f5f5f5;
             padding: 14px 16px;
@@ -222,20 +225,20 @@
             color: #666;
             line-height: 1.6;
         }
-        
+
         .help-text a {
             color: #2a5298;
             text-decoration: none;
         }
-        
+
         .help-text a:hover {
             text-decoration: underline;
         }
-        
+
         .key-input-group {
             position: relative;
         }
-        
+
         .toggle-key {
             position: absolute;
             right: 12px;
@@ -252,12 +255,13 @@
             justify-content: center;
             padding: 0;
         }
-        
+
         .toggle-key:hover {
             color: #666;
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="setup-card">
@@ -265,25 +269,31 @@
                 <h1>⚖️ KanoonVault</h1>
                 <p>Set Up AI Assistance</p>
             </div>
-            
+
             <form id="setupForm">
                 <div class="form-group">
-                    <label for="apiKey">OpenRouter API Key</label>
+                    <label for="apiKey">OpenRouter API Key (Chat & Timeline)</label>
                     <div class="key-input-group">
-                        <input 
-                            type="password" 
-                            id="apiKey" 
-                            placeholder="sk-or-v1-••••••••••••••"
-                            required
-                            autocomplete="off"
-                        >
+                        <input type="password" id="apiKey" placeholder="sk-or-v1-••••••••••••••" required
+                            autocomplete="off">
                         <button type="button" class="toggle-key" id="toggleKey" title="Show/hide key">👁️</button>
                     </div>
-                    <span class="input-hint">Your key is stored securely on your computer. Never shared with anyone.</span>
+                    <span class="input-hint">Powers KanoonVault Chat & Legal Reasoning. Stored locally.</span>
                 </div>
-                
+
+                <div class="form-group" style="margin-top: 15px;">
+                    <label for="roboflowKey">Roboflow API Key (GLM-OCR Vision)</label>
+                    <div class="key-input-group">
+                        <input type="password" id="roboflowKey" placeholder="rf_•••••••••••••• or OpenRouter key"
+                            autocomplete="off">
+                        <button type="button" class="toggle-key" id="toggleRoboflowKey"
+                            title="Show/hide key">👁️</button>
+                    </div>
+                    <span class="input-hint">Powers GLM-OCR Roboflow Workflow for document extraction.</span>
+                </div>
+
                 <div id="statusMessage" class="status-message"></div>
-                
+
                 <div class="button-group">
                     <button type="button" class="btn-test" id="testBtn" onclick="testConnection()">
                         Test Connection
@@ -292,27 +302,28 @@
                         Continue
                     </button>
                 </div>
-                
+
                 <div class="help-text">
-                    <strong>Don't have an API key yet?</strong><br>
-                    1. Go to <a href="https://openrouter.ai" target="_blank">openrouter.ai</a><br>
-                    2. Sign up for free<br>
-                    3. Get your API key from the dashboard<br>
-                    4. Paste it above and test the connection
+                    <strong>Need API keys?</strong><br>
+                    • OpenRouter Key: <a href="https://openrouter.ai" target="_blank">openrouter.ai</a><br>
+                    • Roboflow Key: <a href="https://roboflow.com" target="_blank">roboflow.com</a>
                 </div>
             </form>
         </div>
     </div>
-    
+
     <script>
         const apiKeyInput = document.getElementById('apiKey');
         const testBtn = document.getElementById('testBtn');
         const continueBtn = document.getElementById('continueBtn');
         const statusMessage = document.getElementById('statusMessage');
         const toggleKeyBtn = document.getElementById('toggleKey');
-        
+
+        const roboflowKeyInput = document.getElementById('roboflowKey');
+        const toggleRoboflowKeyBtn = document.getElementById('toggleRoboflowKey');
+
         let testPassed = false;
-        
+
         // Toggle API key visibility
         toggleKeyBtn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -320,25 +331,34 @@
             apiKeyInput.type = isPassword ? 'text' : 'password';
             toggleKeyBtn.textContent = isPassword ? '🙈' : '👁️';
         });
-        
+
+        if (toggleRoboflowKeyBtn) {
+            toggleRoboflowKeyBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const isPassword = roboflowKeyInput.type === 'password';
+                roboflowKeyInput.type = isPassword ? 'text' : 'password';
+                toggleRoboflowKeyBtn.textContent = isPassword ? '🙈' : '👁️';
+            });
+        }
+
         // Reset test status when user changes the input
         apiKeyInput.addEventListener('input', () => {
             testPassed = false;
             continueBtn.disabled = true;
             statusMessage.classList.remove('show');
         });
-        
+
         async function testConnection() {
             const apiKey = apiKeyInput.value.trim();
-            
+
             if (!apiKey) {
                 showStatus('❌ Please enter an API key', 'error');
                 return;
             }
-            
+
             testBtn.disabled = true;
             showStatus('<span class="spinner"></span>Testing connection...', 'loading');
-            
+
             try {
                 const response = await fetch('/api/setup/test-api-key?api_key=' + encodeURIComponent(apiKey), {
                     method: 'POST',
@@ -346,9 +366,9 @@
                         'Content-Type': 'application/json'
                     }
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (data.valid) {
                     showStatus(data.message, 'success');
                     testPassed = true;
@@ -366,17 +386,18 @@
                 testBtn.disabled = false;
             }
         }
-        
+
         async function continueSetup() {
             if (!testPassed) {
                 showStatus('❌ Please test the connection first', 'error');
                 return;
             }
-            
+
             const apiKey = apiKeyInput.value.trim();
+            const roboflowKey = roboflowKeyInput ? roboflowKeyInput.value.trim() : '';
             continueBtn.disabled = true;
-            showStatus('<span class="spinner"></span>Saving API key...', 'loading');
-            
+            showStatus('<span class="spinner"></span>Saving API key(s)...', 'loading');
+
             try {
                 const response = await fetch('/api/setup/save-api-key?api_key=' + encodeURIComponent(apiKey) + '&key_type=OPENROUTER', {
                     method: 'POST',
@@ -384,11 +405,20 @@
                         'Content-Type': 'application/json'
                     }
                 });
-                
+
                 const data = await response.json();
-                
+
+                if (roboflowKey) {
+                    await fetch('/api/setup/save-api-key?api_key=' + encodeURIComponent(roboflowKey) + '&key_type=ROBOFLOW', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                }
+
                 if (data.ok) {
-                    showStatus('✅ API key saved!\nRedirecting to KanoonVault...', 'success');
+                    showStatus('✅ API key(s) saved!\nRedirecting to KanoonVault...', 'success');
                     // Redirect to main app
                     setTimeout(() => {
                         window.location.href = '/';
@@ -402,51 +432,41 @@
                 continueBtn.disabled = false;
             }
         }
-        
+
         function showStatus(message, type) {
             statusMessage.innerHTML = message;
             statusMessage.className = 'status-message show status-' + type;
         }
-        
+
         // Allow Enter key to test
         apiKeyInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !testBtn.disabled) {
                 testConnection();
             }
         });
-        
-        // Check if setup is already complete
+
+        // Check setup status (redirect to welcome if first-run storage incomplete)
         async function checkSetupStatus() {
             try {
-                // Check first-run status first
                 const storageResponse = await fetch('/api/setup/storage-location');
                 const storageData = await storageResponse.json();
-                
+
                 if (!storageData.first_run_complete) {
-                    // First-run not complete, should be on welcome screen
                     console.log('[Setup] Redirecting to welcome - first-run incomplete');
                     window.location.href = '/static/welcome.html';
                     return;
-                }
-                
-                // Check API key status
-                const response = await fetch('/api/setup/status');
-                const data = await response.json();
-                
-                if (data.setup_complete) {
-                    // API key already configured, redirect to main app
-                    window.location.href = '/';
                 }
             } catch (error) {
                 console.error('Failed to check setup status:', error);
             }
         }
-        
+
         // Check on load
         checkSetupStatus();
-        
+
         // Focus on the API key input
         apiKeyInput.focus();
     </script>
 </body>
+
 </html>

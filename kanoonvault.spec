@@ -9,7 +9,7 @@ This spec file:
 - Includes frontend static files (HTML, CSS, JS)
 - Uses --onedir format for better dependency handling
 - Sets entry point to launcher.py
-- Configures the application as a Windows GUI application (no console window)
+- Configures the application as a Windows GUI app (no console window)
 """
 
 import os
@@ -78,7 +78,7 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=True,  # Set to False to hide console window in final build
+    console=False,  # Set to False to hide console window in final build
     disable_windowed_traceback=False,
     target_arch=None,
     codesign_identity=None,

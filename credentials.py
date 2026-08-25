@@ -4,14 +4,21 @@ Windows Credential Manager Integration for KanoonVault
 Provides secure storage of API keys using Windows DPAPI (Data Protection API)
 via the credential manager, avoiding plain-text storage.
 
-On non-Windows systems, falls back to encrypted file storage.
+On non-Windows systems or when keyring is not installed, falls back to .env file storage.
 """
 
 import os
 import sys
 import json
-import keyring
 from pathlib import Path
+
+# ── Optional keyring import ────────────────────────────────────────────────
+KEYRING_AVAILABLE = False
+try:
+    import keyring
+    KEYRING_AVAILABLE = True
+except ImportError:
+    pass
 
 
 def get_credential_service_name() -> str:
@@ -22,63 +29,48 @@ def get_credential_service_name() -> str:
 def save_api_key(key_type: str, api_key: str) -> bool:
     """
     Save an API key securely using the system credential manager.
-    
-    Args:
-        key_type: Type of key (e.g., "OPENROUTER", "OCR_VISION", "TIMELINE")
-        api_key: The API key to save
-        
-    Returns:
-        True if successful, False otherwise
+    Falls back to .env file if keyring is not available.
     """
-    try:
-        service = get_credential_service_name()
-        keyring.set_password(service, key_type, api_key)
-        return True
-    except Exception as e:
-        print(f"[WARN] Failed to save API key to credential manager: {e}")
-        # Fall back to encrypted file if available
-        return _save_key_to_env_file(key_type, api_key)
+    if KEYRING_AVAILABLE:
+        try:
+            service = get_credential_service_name()
+            keyring.set_password(service, key_type, api_key)
+            return True
+        except Exception as e:
+            print(f"[WARN] Failed to save API key to credential manager: {e}")
+
+    # Fall back to .env file
+    return _save_key_to_env_file(key_type, api_key)
 
 
 def load_api_key(key_type: str) -> str | None:
     """
     Load an API key from secure storage.
-    
-    Args:
-        key_type: Type of key (e.g., "OPENROUTER", "OCR_VISION", "TIMELINE")
-        
-    Returns:
-        The API key or None if not found
+    Falls back to .env file if keyring is not available.
     """
-    try:
-        service = get_credential_service_name()
-        key = keyring.get_password(service, key_type)
-        if key:
-            return key
-    except Exception as e:
-        print(f"[WARN] Failed to load API key from credential manager: {e}")
-    
+    if KEYRING_AVAILABLE:
+        try:
+            service = get_credential_service_name()
+            key = keyring.get_password(service, key_type)
+            if key:
+                return key
+        except Exception as e:
+            print(f"[WARN] Failed to load API key from credential manager: {e}")
+
     # Fall back to .env file
     return _load_key_from_env_file(key_type)
 
 
 def delete_api_key(key_type: str) -> bool:
-    """
-    Delete an API key from secure storage.
-    
-    Args:
-        key_type: Type of key to delete
-        
-    Returns:
-        True if successful
-    """
-    try:
-        service = get_credential_service_name()
-        keyring.delete_password(service, key_type)
-        return True
-    except Exception as e:
-        print(f"[WARN] Failed to delete API key: {e}")
-        return False
+    """Delete an API key from secure storage."""
+    if KEYRING_AVAILABLE:
+        try:
+            service = get_credential_service_name()
+            keyring.delete_password(service, key_type)
+            return True
+        except Exception as e:
+            print(f"[WARN] Failed to delete API key: {e}")
+    return False
 
 
 def _save_key_to_env_file(key_type: str, api_key: str) -> bool:
@@ -88,9 +80,12 @@ def _save_key_to_env_file(key_type: str, api_key: str) -> bool:
     This is less secure than credential manager but works on all systems.
     """
     try:
-        from launcher import get_env_path
-        env_path = Path(os.environ.get("KANOONVAULT_USER_DATA_DIR"))
-        env_file = env_path / ".env"
+        user_data = os.environ.get("KANOONVAULT_USER_DATA_DIR")
+        if user_data:
+            env_file = Path(user_data) / ".env"
+        else:
+            # Dev mode: save to project root .env
+            env_file = Path(__file__).parent / ".env"
         
         # Load existing .env content
         env_content = {}
@@ -128,8 +123,11 @@ def _load_key_from_env_file(key_type: str) -> str | None:
     Fallback: Load API key from .env file in user data directory.
     """
     try:
-        env_path = Path(os.environ.get("KANOONVAULT_USER_DATA_DIR"))
-        env_file = env_path / ".env"
+        user_data = os.environ.get("KANOONVAULT_USER_DATA_DIR")
+        if user_data:
+            env_file = Path(user_data) / ".env"
+        else:
+            env_file = Path(__file__).parent / ".env"
         
         if not env_file.exists():
             return None

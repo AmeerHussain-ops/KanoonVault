@@ -76,7 +76,7 @@ def copy_env_template_if_needed(user_data_dir: Path):
 
 # Chat
 OPENROUTER_API_KEY=
-OPENROUTER_MODEL=z-ai/glm-4.5-air:free
+OPENROUTER_MODEL=z-ai/glm-5.2:free
 
 # Vision OCR
 OCR_VISION_API_KEY=

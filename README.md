@@ -40,7 +40,7 @@
 
 🤖 **AI-Powered Chat**
 - Case-specific chat grounded in uploaded documents (no external knowledge)
-- Chat uses **OpenRouter** with `z-ai/glm-4.5-air:free` (separate from the OCR vision model)
+- Chat uses **OpenRouter** with `z-ai/glm-5.2:free` (separate from the OCR vision model)
 - Full-text search (FTS5) + vector similarity search (ChromaDB embeddings)
 - Per-case isolated chat histories
 - Automatic source attribution with document links
@@ -167,7 +167,7 @@ copy .env.example .env
 | Variable | Purpose | Default model |
 |----------|---------|----------------|
 | `OPENROUTER_API_KEY` | Case chat (Q&A) | — |
-| `OPENROUTER_MODEL` | Chat model | `z-ai/glm-4.5-air:free` |
+| `OPENROUTER_MODEL` | Chat model | `z-ai/glm-5.2:free` |
 | `OCR_VISION_API_KEY` | Vision OCR (dual OCR with Paddle) | — |
 | `OCR_VISION_MODEL` | Vision OCR model | `google/gemma-4-31b-it:free` |
 | `TIMELINE_API_KEY` | Timeline date/event extraction | — |
@@ -180,7 +180,7 @@ Example `.env` (use your own key; do not commit):
 ```env
 # Chat — GLM (not used for OCR)
 OPENROUTER_API_KEY=sk-or-v1-...
-OPENROUTER_MODEL=z-ai/glm-4.5-air:free
+OPENROUTER_MODEL=z-ai/glm-5.2:free
 
 # Vision OCR — Gemma 4 (dual OCR with PaddleOCR)
 OCR_VISION_API_KEY=sk-or-v1-...
@@ -349,7 +349,7 @@ For a broader architectural view, see `DESIGN_REFERENCES.md`.
 
 ### Chat uses wrong model
 - **Issue**: Chat should use GLM, not Gemma
-- **Solution**: Keep `OPENROUTER_MODEL=z-ai/glm-4.5-air:free` for chat. Use `OCR_VISION_MODEL=google/gemma-4-31b-it:free` only for vision OCR.
+- **Solution**: Keep `OPENROUTER_MODEL=z-ai/glm-5.2:free` for chat. Use `OCR_VISION_MODEL=google/gemma-4-31b-it:free` only for vision OCR.
 
 ### Timeline empty after upload
 - **Issue**: Documents uploaded but Timeline panel shows “No timeline events yet”

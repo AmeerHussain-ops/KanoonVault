@@ -123,6 +123,12 @@ async def stream_response(
     Yields (token, source_metadata) tuples from OpenRouter as they stream in.
     Uses vector memory to retrieve relevant chunks for the question.
     """
+    from config import get_api_key
+    api_key = get_api_key("OPENROUTER")
+    if not api_key:
+        yield "❌ **API Key Missing**: OpenRouter API key is not configured. Please click on setup to configure your API key.", []
+        return
+
     # Check for special commands
     if is_special_command(question):
         # For special commands, return empty response with source metadata
@@ -138,41 +144,79 @@ async def stream_response(
     else:
         system = SYSTEM_PROMPT_TEMPLATE.format(case_memory=case_memory)
 
-    payload = {
-        "model": OPENROUTER_MODEL,
-        "messages": [
-            {"role": "system", "content": system},
-            {"role": "user", "content": question}
-        ],
-        "stream": True,
-        "temperature": 0.1,
-        "top_p": 0.9,
-        "max_tokens": 1024,
-    }
+    from config import OPENROUTER_FALLBACK_MODEL
+    models_to_try = [OPENROUTER_MODEL]
+    if OPENROUTER_FALLBACK_MODEL and OPENROUTER_FALLBACK_MODEL not in models_to_try:
+        models_to_try.append(OPENROUTER_FALLBACK_MODEL)
 
     headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
+        "HTTP-Referer": "https://kanoonvault.local",
+        "X-Title": "KanoonVault"
     }
 
-    async with httpx.AsyncClient(timeout=120.0) as client:
-        async with client.stream("POST", OPENROUTER_URL, json=payload, headers=headers) as resp:
-            resp.raise_for_status()
-            async for line in resp.aiter_lines():
-                if line.strip():
-                    if line.startswith("data: "):
-                        line = line[6:]  # Remove "data: " prefix
-                    if line.strip() == "[DONE]":
-                        break
-                    try:
-                        data = json.loads(line)
-                        if data.get("choices") and len(data["choices"]) > 0:
-                            delta = data["choices"][0].get("delta", {})
-                            token = delta.get("content", "")
-                            if token:
-                                yield token, source_metadata
-                    except json.JSONDecodeError:
+    last_error = ""
+
+    for model_name in models_to_try:
+        payload = {
+            "model": model_name,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": question}
+            ],
+            "stream": True,
+            "temperature": 0.1,
+            "top_p": 0.9,
+            "max_tokens": 1024,
+        }
+
+        try:
+            tokens_yielded = False
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                async with client.stream("POST", OPENROUTER_URL, json=payload, headers=headers) as resp:
+                    if resp.status_code != 200:
+                        err_body = await resp.aread()
+                        err_text = err_body.decode('utf-8', errors='replace')
+                        last_error = f"HTTP {resp.status_code}: {err_text[:200]}"
+                        print(f"[LLM Service] Model '{model_name}' failed with {last_error}. Trying fallback...")
                         continue
+
+                    async for line in resp.aiter_lines():
+                        if line.strip():
+                            if line.startswith("data: "):
+                                line = line[6:]  # Remove "data: " prefix
+                            if line.strip() == "[DONE]":
+                                break
+                            try:
+                                data = json.loads(line)
+                                if data.get("error"):
+                                    err_info = data.get("error")
+                                    err_msg = err_info.get("message") if isinstance(err_info, dict) else str(err_info)
+                                    raw_msg = err_info.get("metadata", {}).get("raw", "") if isinstance(err_info, dict) and isinstance(err_info.get("metadata"), dict) else ""
+                                    last_error = f"{err_msg} ({raw_msg})" if raw_msg else str(err_msg)
+                                    print(f"[LLM Service] Stream error on model '{model_name}': {last_error}. Trying fallback...")
+                                    break
+
+                                if data.get("choices") and len(data["choices"]) > 0:
+                                    delta = data["choices"][0].get("delta", {})
+                                    token = delta.get("content", "")
+                                    if token:
+                                        tokens_yielded = True
+                                        yield token, source_metadata
+                            except json.JSONDecodeError:
+                                continue
+
+            if tokens_yielded:
+                return
+
+        except Exception as e:
+            last_error = f"{type(e).__name__}: {str(e)[:200]}"
+            print(f"[LLM Service] Exception on model '{model_name}': {last_error}. Trying fallback...")
+            continue
+
+    # If all models fail
+    yield f"⚠️ **OpenRouter AI Error**: Unable to get response from primary model (`{OPENROUTER_MODEL}`) or fallback (`{OPENROUTER_FALLBACK_MODEL}`). Details: {last_error}", []
 
 
 async def get_response(question: str, case_id: int = None) -> Tuple[str, List[Dict]]:

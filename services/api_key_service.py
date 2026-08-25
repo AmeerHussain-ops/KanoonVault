@@ -36,7 +36,7 @@ class APIKeyTestResult:
 
 async def test_api_key_async(
     api_key: str,
-    model: str = "z-ai/glm-4.5-air:free",
+    model: str = "z-ai/glm-5.2:free",
     timeout: int = 10
 ) -> APIKeyTestResult:
     """
@@ -73,9 +73,10 @@ async def test_api_key_async(
     }
     
     try:
+        from config import OPENROUTER_URL
         async with httpx.AsyncClient(timeout=timeout) as client:
             response = await client.post(
-                "https://openrouter.ai/api/v1/chat/completions",
+                OPENROUTER_URL,
                 json=test_payload,
                 headers=headers
             )
@@ -103,15 +104,15 @@ async def test_api_key_async(
             )
         
         elif response.status_code == 429:
-            # Rate limited or account limit exceeded
+            # Rate limited — but this proves the key IS valid (authenticated successfully)
+            # Free-tier models hit rate limits easily; the key itself works fine
             return APIKeyTestResult(
-                valid=False,
-                status="rate_limited",
-                message="💳 Account limit exceeded\n\nYou've reached your account's usage limit.\n"
-                       "Please check your OpenRouter account settings.",
+                valid=True,
+                status="valid_rate_limited",
+                message="✅ Connection successful\nYour API key is valid. Free-tier models may have brief rate limits — this is normal.",
                 details={
                     "status_code": 429,
-                    "error": "Rate limit or account limit exceeded"
+                    "note": "Key authenticated successfully, rate limit is temporary"
                 }
             )
         
@@ -201,7 +202,7 @@ async def test_api_key_async(
 
 def test_api_key(
     api_key: str,
-    model: str = "z-ai/glm-4.5-air:free",
+    model: str = "z-ai/glm-5.2:free",
     timeout: int = 10
 ) -> APIKeyTestResult:
     """
